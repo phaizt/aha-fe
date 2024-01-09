@@ -6,29 +6,21 @@
           <CCard class="mx-4">
             <CCardBody class="p-4">
               <CForm @submit.prevent="handleSubmit">
-                <h1>Register</h1>
+                <h1>Update Password</h1>
                 <CAlert color="danger" v-if="errorMessage.length">
                   <ul v-for="(err, idx) in errorMessage" :key="idx">
                     <li>{{ err }}</li>
                   </ul>
                 </CAlert>
-                <p class="text-medium-emphasis">Create your account</p>
                 <CInputGroup class="mb-3">
                   <CInputGroupText>
-                    <CIcon icon="cil-user" />
+                    <CIcon icon="cil-lock-locked" />
                   </CInputGroupText>
                   <CFormInput
-                    placeholder="Name"
-                    autocomplete="name"
-                    v-model="name"
-                  />
-                </CInputGroup>
-                <CInputGroup class="mb-3">
-                  <CInputGroupText>@</CInputGroupText>
-                  <CFormInput
-                    placeholder="Email"
-                    autocomplete="email"
-                    v-model="email"
+                    type="password"
+                    placeholder="Old Password"
+                    autocomplete="old-password"
+                    v-model="old_password"
                   />
                 </CInputGroup>
                 <CInputGroup class="mb-3">
@@ -58,7 +50,7 @@
                     color="success"
                     type="submit"
                     :disabled="disableButton"
-                    >Create Account</CButton
+                    >Update Password</CButton
                   >
                 </div>
               </CForm>
@@ -73,41 +65,63 @@
 <script>
 import axios from 'axios'
 export default {
-  name: 'Register',
+  name: 'Password',
   data() {
     return {
-      name: '',
+      old_password: '',
       password: '',
-      email: '',
       password_confirm: '',
       errorMessage: [],
       disableButton: false,
+      access_token: '',
     }
+  },
+  mounted() {
+    this.access_token = this.$cookies.get('access_token')
+    axios({
+      url: `${process.env.VUE_APP_API_URL}/users/logged-in-user`,
+      headers: {
+        Authorization: `Bearer ${this.access_token}`,
+      },
+    })
+      .then((el) => {
+        if (el?.status === 200) {
+          this.name = el?.data?.data?.name
+          this.email = el?.data?.data?.email
+        }
+      })
+      .catch((err) => {
+        this.errorMessage = err?.response?.data?.message
+      })
   },
   methods: {
     async handleSubmit() {
       this.errorMessage = []
       this.disableButton = true
       axios({
-        method: 'post',
-        url: `${process.env.VUE_APP_API_URL}/users`,
+        method: 'put',
+        url: `${process.env.VUE_APP_API_URL}/users/reset-password`,
+        headers: {
+          Authorization: `Bearer ${this.access_token}`,
+        },
         data: {
-          name: this.name,
           password: this.password,
-          email: this.email,
           password_confirm: this.password_confirm,
+          old_password: this.old_password,
         },
       })
         .then((el) => {
-          if (el?.status === 201) {
-            alert('success, please login')
-            this.$router.push({ path: '/pages/login' })
+          if (el?.status === 200) {
+            alert('success')
             this.disableButton = false
+            this.password = ''
+            this.password_confirm = ''
+            this.old_password = ''
           }
         })
         .catch((err) => {
-          this.disableButton = false
           this.errorMessage = err?.response?.data?.message
+          this.disableButton = false
         })
     },
   },

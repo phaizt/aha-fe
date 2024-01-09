@@ -6,8 +6,13 @@
           <CCardGroup>
             <CCard class="p-4">
               <CCardBody>
-                <CForm>
+                <CForm @submit.prevent="handleSubmit">
                   <h1>Login</h1>
+                  <CAlert color="danger" v-if="errorMessage.length">
+                    <ul v-for="(err, idx) in errorMessage" :key="idx">
+                      <li>{{ err }}</li>
+                    </ul>
+                  </CAlert>
                   <p class="text-medium-emphasis">Sign In to your account</p>
                   <CInputGroup class="mb-3">
                     <CInputGroupText>
@@ -16,6 +21,7 @@
                     <CFormInput
                       placeholder="Username"
                       autocomplete="username"
+                      v-model="email"
                     />
                   </CInputGroup>
                   <CInputGroup class="mb-4">
@@ -26,15 +32,22 @@
                       type="password"
                       placeholder="Password"
                       autocomplete="current-password"
+                      v-model="password"
                     />
                   </CInputGroup>
                   <CRow>
                     <CCol :xs="6">
-                      <CButton color="primary" class="px-4"> Login </CButton>
+                      <CButton color="primary" class="px-4" type="submit">
+                        Login
+                      </CButton>
                     </CCol>
                     <CCol :xs="6" class="text-right">
-                      <CButton color="link" class="px-0">
-                        Forgot password?
+                      <CButton
+                        color="secondary"
+                        class="px-4 text-sm"
+                        @click="googleLogin"
+                      >
+                        Google Login
                       </CButton>
                     </CCol>
                   </CRow>
@@ -50,7 +63,12 @@
                     sed do eiusmod tempor incididunt ut labore et dolore magna
                     aliqua.
                   </p>
-                  <CButton color="light" variant="outline" class="mt-3">
+                  <CButton
+                    color="light"
+                    variant="outline"
+                    class="mt-3"
+                    @click="this.$router.push({ path: 'register' })"
+                  >
                     Register Now!
                   </CButton>
                 </div>
@@ -64,7 +82,53 @@
 </template>
 
 <script>
+import axios from 'axios'
+
 export default {
   name: 'Login',
+  data: () => {
+    return {
+      email: '',
+      password: '',
+      errorMessage: [],
+    }
+  },
+  mounted() {
+    const access_token = this.$route.query?.access_token
+    if (access_token) {
+      this.$cookies.config(60 * 60 * 24 * 30, '')
+      this.$cookies.set('access_token', access_token)
+    }
+
+    if (this.$cookies.get('access_token')) {
+      this.$router.push({ path: '/dashboard' })
+    }
+  },
+  methods: {
+    async handleSubmit() {
+      this.errorMessage = []
+      axios({
+        method: 'post',
+        url: `${process.env.VUE_APP_API_URL}/auth/login`,
+        data: {
+          email: this.email,
+          password: this.password,
+        },
+      })
+        .then((el) => {
+          if (el?.status === 200) {
+            this.$cookies.config(60 * 60 * 24 * 30, '')
+            this.$cookies.set('access_token', el?.data?.access_token)
+            this.$router.push({ path: '/dashboard' })
+          }
+        })
+        .catch((err) => {
+          this.errorMessage = err?.response?.data?.message
+        })
+    },
+    googleLogin() {
+      window.location.href = `${process.env.VUE_APP_API_URL}/google/redirect`
+    },
+  },
 }
 </script>

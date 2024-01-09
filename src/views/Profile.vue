@@ -6,13 +6,12 @@
           <CCard class="mx-4">
             <CCardBody class="p-4">
               <CForm @submit.prevent="handleSubmit">
-                <h1>Register</h1>
+                <h1>Profile</h1>
                 <CAlert color="danger" v-if="errorMessage.length">
                   <ul v-for="(err, idx) in errorMessage" :key="idx">
                     <li>{{ err }}</li>
                   </ul>
                 </CAlert>
-                <p class="text-medium-emphasis">Create your account</p>
                 <CInputGroup class="mb-3">
                   <CInputGroupText>
                     <CIcon icon="cil-user" />
@@ -28,29 +27,8 @@
                   <CFormInput
                     placeholder="Email"
                     autocomplete="email"
+                    disabled
                     v-model="email"
-                  />
-                </CInputGroup>
-                <CInputGroup class="mb-3">
-                  <CInputGroupText>
-                    <CIcon icon="cil-lock-locked" />
-                  </CInputGroupText>
-                  <CFormInput
-                    type="password"
-                    placeholder="Password"
-                    autocomplete="new-password"
-                    v-model="password"
-                  />
-                </CInputGroup>
-                <CInputGroup class="mb-4">
-                  <CInputGroupText>
-                    <CIcon icon="cil-lock-locked" />
-                  </CInputGroupText>
-                  <CFormInput
-                    type="password"
-                    placeholder="Repeat password"
-                    autocomplete="new-password"
-                    v-model="password_confirm"
                   />
                 </CInputGroup>
                 <div class="d-grid">
@@ -58,7 +36,7 @@
                     color="success"
                     type="submit"
                     :disabled="disableButton"
-                    >Create Account</CButton
+                    >Update Profile</CButton
                   >
                 </div>
               </CForm>
@@ -73,36 +51,52 @@
 <script>
 import axios from 'axios'
 export default {
-  name: 'Register',
+  name: 'Profile',
   data() {
     return {
       name: '',
-      password: '',
       email: '',
-      password_confirm: '',
       errorMessage: [],
       disableButton: false,
+      access_token: '',
     }
+  },
+  mounted() {
+    this.access_token = this.$cookies.get('access_token')
+    axios({
+      url: `${process.env.VUE_APP_API_URL}/users/logged-in-user`,
+      headers: {
+        Authorization: `Bearer ${this.access_token}`,
+      },
+    })
+      .then((el) => {
+        if (el?.status === 200) {
+          this.name = el?.data?.data?.name
+          this.email = el?.data?.data?.email
+        }
+      })
+      .catch((err) => {
+        this.errorMessage = err?.response?.data?.message
+      })
   },
   methods: {
     async handleSubmit() {
       this.errorMessage = []
       this.disableButton = true
       axios({
-        method: 'post',
-        url: `${process.env.VUE_APP_API_URL}/users`,
+        method: 'put',
+        url: `${process.env.VUE_APP_API_URL}/users/update-profile`,
         data: {
           name: this.name,
-          password: this.password,
-          email: this.email,
-          password_confirm: this.password_confirm,
+        },
+        headers: {
+          Authorization: `Bearer ${this.access_token}`,
         },
       })
         .then((el) => {
-          if (el?.status === 201) {
-            alert('success, please login')
-            this.$router.push({ path: '/pages/login' })
+          if (el?.status === 200) {
             this.disableButton = false
+            alert('success')
           }
         })
         .catch((err) => {

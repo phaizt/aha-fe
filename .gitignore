@@ -5,6 +5,7 @@ tests/e2e/reports/
 
 # local env files
 .env.local
+.env
 .env.*.local
 
 # dependencies

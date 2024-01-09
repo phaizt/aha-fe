@@ -18,6 +18,19 @@ const routes = [
         // which is lazy-loaded when the route is visited.
         component: () =>
           import(/* webpackChunkName: "dashboard" */ '@/views/Dashboard.vue'),
+        meta: {
+          requiresAuth: true,
+        },
+      },
+      {
+        path: '/profile',
+        name: 'Profile',
+        component: () => import('@/views/Profile.vue'),
+      },
+      {
+        path: '/password',
+        name: 'Password',
+        component: () => import('@/views/Password.vue'),
       },
       {
         path: '/theme',
@@ -302,6 +315,23 @@ const router = createRouter({
     // always scroll to top
     return { top: 0 }
   },
+})
+
+router.beforeEach((to, from, next) => {
+  if (to.matched.some((record) => record.meta.requiresAuth)) {
+    // this route requires auth, check if logged in
+    // if not, redirect to login page.
+    // let access_token = Vue.cookie.get('access_token')
+
+    // console.log(access_token)
+    if (!window.$cookies.get('access_token')) {
+      next({ name: 'Login' })
+    } else {
+      next() // go to wherever I'm going
+    }
+  } else {
+    next() // does not require auth, make sure to always call next()!
+  }
 })
 
 export default router

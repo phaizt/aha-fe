@@ -1,4 +1,6 @@
 import { createApp } from 'vue'
+import VueCookies from 'vue-cookies'
+
 import App from './App.vue'
 import router from './router'
 import store from './store'
@@ -15,5 +17,6 @@ app.use(CoreuiVue)
 app.provide('icons', icons)
 app.component('CIcon', CIcon)
 app.component('DocsExample', DocsExample)
+app.use(VueCookies)
 
 app.mount('#app')

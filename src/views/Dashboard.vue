@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div v-if="is_email_verified">
     <WidgetsStatsA />
     <CRow>
       <CCol :md="12">
@@ -266,6 +266,17 @@
       </CCol>
     </CRow>
   </div>
+  <div v-else>
+    <h1>Please Verify your email</h1>
+    <CButton
+      color="primary"
+      class="px-4"
+      :disabled="disable_button_resend"
+      @click="resendEmailActivation"
+    >
+      Resend Email Verification
+    </CButton>
+  </div>
 </template>
 
 <script>
@@ -278,6 +289,7 @@ import avatar6 from '@/assets/images/avatars/6.jpg'
 import MainChartExample from './charts/MainChartExample'
 import WidgetsStatsA from './widgets/WidgetsStatsTypeA.vue'
 import WidgetsStatsD from './widgets/WidgetsStatsTypeD.vue'
+import axios from 'axios'
 
 export default {
   name: 'Dashboard',
@@ -285,6 +297,51 @@ export default {
     MainChartExample,
     WidgetsStatsA,
     WidgetsStatsD,
+  },
+  data() {
+    return {
+      is_email_verified: false,
+      disable_button_resend: false,
+      access_token: '',
+    }
+  },
+  mounted() {
+    this.is_email_verified = false
+    this.access_token = this.$cookies.get('access_token')
+    axios({
+      url: `${process.env.VUE_APP_API_URL}/users/logged-in-user`,
+      headers: {
+        Authorization: `Bearer ${this.access_token}`,
+      },
+    })
+      .then((el) => {
+        if (el?.status === 200) {
+          this.is_email_verified = el?.data?.data?.is_email_verified
+        }
+      })
+      .catch((err) => {
+        this.errorMessage = err?.response?.data?.message
+      })
+  },
+  methods: {
+    async resendEmailActivation() {
+      this.disable_button_resend = true
+      axios({
+        method: 'post',
+        url: `${process.env.VUE_APP_API_URL}/users/resend-email-activation`,
+        headers: {
+          Authorization: `Bearer ${this.access_token}`,
+        },
+      })
+        .then((el) => {
+          if (el?.status === 200) {
+            this.disable_button_resend = false
+          }
+        })
+        .catch((err) => {
+          this.disable_button_resend = false
+        })
+    },
   },
   setup() {
     const progressGroupExample1 = [

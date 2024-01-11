@@ -79,7 +79,7 @@ export default {
   mounted() {
     this.access_token = this.$cookies.get('access_token')
     axios({
-      url: `${process.env.VUE_APP_API_URL}/users/logged-in-user`,
+      url: `${process.env.VUE_APP_API_URL}/users/profile`,
       headers: {
         Authorization: `Bearer ${this.access_token}`,
       },

@@ -102,7 +102,7 @@ export default {
     this.is_email_verified = false
     this.access_token = this.$cookies.get('access_token')
     axios({
-      url: `${process.env.VUE_APP_API_URL}/users/logged-in-user`,
+      url: `${process.env.VUE_APP_API_URL}/users/profile`,
       headers: {
         Authorization: `Bearer ${this.access_token}`,
       },
@@ -162,11 +162,12 @@ export default {
         },
       })
         .then((el) => {
-          if (el?.status === 200) {
+          if (el?.status === 201) {
+            alert('success')
             this.disable_button_resend = false
           }
         })
-        .catch((err) => {
+        .catch(() => {
           this.disable_button_resend = false
         })
     },

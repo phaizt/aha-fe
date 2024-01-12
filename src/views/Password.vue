@@ -12,7 +12,18 @@
                     <li>{{ err }}</li>
                   </ul>
                 </CAlert>
-                <CInputGroup class="mb-3">
+                <CAlert
+                  v-if="is_oauth && !is_password_changed"
+                  color="info"
+                  class="text-sm"
+                >
+                  You are logged in as google account, you can change your
+                  password without old password for the first time
+                </CAlert>
+                <CInputGroup
+                  v-if="is_oauth && is_password_changed"
+                  class="mb-3"
+                >
                   <CInputGroupText>
                     <CIcon icon="cil-lock-locked" />
                   </CInputGroupText>
@@ -74,6 +85,8 @@ export default {
       errorMessage: [],
       disableButton: false,
       access_token: '',
+      is_oauth: false,
+      is_password_changed: false,
     }
   },
   mounted() {
@@ -86,8 +99,9 @@ export default {
     })
       .then((el) => {
         if (el?.status === 200) {
-          this.name = el?.data?.data?.name
-          this.email = el?.data?.data?.email
+          this.is_oauth = el?.data?.data?.is_oauth ?? false
+          this.is_password_changed =
+            el?.data?.data?.is_password_changed ?? false
         }
       })
       .catch((err) => {
@@ -98,6 +112,9 @@ export default {
     async handleSubmit() {
       this.errorMessage = []
       this.disableButton = true
+      if (this.is_oauth && !this.is_password_changed) {
+        this.old_password = this.password
+      }
       axios({
         method: 'put',
         url: `${process.env.VUE_APP_API_URL}/users/reset-password`,
@@ -117,6 +134,7 @@ export default {
             this.password = ''
             this.password_confirm = ''
             this.old_password = ''
+            this.is_password_changed = el?.data?.data.is_password_changed
           }
         })
         .catch((err) => {

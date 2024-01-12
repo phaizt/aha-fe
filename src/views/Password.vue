@@ -21,7 +21,7 @@
                   password without old password for the first time
                 </CAlert>
                 <CInputGroup
-                  v-if="is_oauth && is_password_changed"
+                  v-if="(is_oauth && is_password_changed) || !is_oauth"
                   class="mb-3"
                 >
                   <CInputGroupText>

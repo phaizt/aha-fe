@@ -123,7 +123,8 @@ export default {
           }
         })
         .catch((err) => {
-          this.errorMessage = err?.response?.data?.message
+          const errMsg = err?.response?.data?.message
+          this.errorMessage = Array.isArray(errMsg) ? errMsg : [errMsg]
         })
     },
     googleLogin() {
